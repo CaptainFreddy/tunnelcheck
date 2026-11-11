@@ -26,7 +26,8 @@ export type AccessRule = Record<string, unknown>;
 
 export interface AccessPolicy {
   name?: string;
-  decision: 'allow' | 'deny' | 'non_identity' | 'bypass';
+  /** allow, deny, non_identity (service auth) or bypass; kept open so new values fail closed. */
+  decision: string;
   include?: AccessRule[];
   require?: AccessRule[];
   exclude?: AccessRule[];

@@ -60,7 +60,7 @@ export function decide(host: Host, cov: Coverage, probe: ProbeResult, isPublic: 
 
   const state = policyState(cov.root);
   if (state.kind === 'bypass') {
-    notes.push(`policy "${state.policy}" bypasses Access for everyone`);
+    notes.push(`policy "${state.policy}" lets everyone through without a login`);
     return finding('open');
   }
   if (probe.kind === 'reachable') {

@@ -3,11 +3,14 @@ import type { Prober, ProbeResult } from './types.ts';
 const ACCESS_LOGIN_HOST = '.cloudflareaccess.com';
 
 /** Turn a raw HTTP answer into what it says about the gate in front of the site. */
-export function classify(status: number, location: string | null): ProbeResult {
+export function classify(status: number, location: string | null, hostname: string): ProbeResult {
   if (status >= 300 && status < 400 && location) {
     try {
-      const target = new URL(location, 'https://placeholder.invalid');
-      if (target.hostname.endsWith(ACCESS_LOGIN_HOST) || target.pathname.startsWith('/cdn-cgi/access/login')) {
+      const target = new URL(location, `https://${hostname}/`);
+      // Access sends visitors to <team>.cloudflareaccess.com. A login path only
+      // counts when it stays on the probed host, never on some other site.
+      const onSameHost = target.hostname === hostname.toLowerCase();
+      if (target.hostname.endsWith(ACCESS_LOGIN_HOST) || (onSameHost && target.pathname.startsWith('/cdn-cgi/access/login'))) {
         return { kind: 'gated', status };
       }
     } catch {
@@ -30,7 +33,7 @@ export function httpProber(timeoutMs = 10_000, fetchImpl: typeof fetch = fetch):
         signal: AbortSignal.timeout(timeoutMs),
       });
       await res.body?.cancel();
-      return classify(res.status, res.headers.get('location'));
+      return classify(res.status, res.headers.get('location'), hostname);
     } catch (err) {
       const cause = err instanceof Error && err.cause instanceof Error ? err.cause.message : undefined;
       const message = cause ?? (err instanceof Error ? err.message : String(err));

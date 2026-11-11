@@ -112,7 +112,10 @@ export type PolicyState =
 export function policyState(app: AccessApp): PolicyState {
   const policies = app.policies ?? [];
   const label = (policy: AccessPolicy) => policy.name ?? 'unnamed policy';
-  const bypass = policies.find((p) => p.decision === 'bypass' && matchesEveryone(p));
+  // Bypass and service-auth policies skip the login. Any decision we do not
+  // recognise is treated the same way, so a new policy type fails closed.
+  const skipsLogin = (p: AccessPolicy) => p.decision !== 'allow' && p.decision !== 'deny';
+  const bypass = policies.find((p) => skipsLogin(p) && matchesEveryone(p));
   if (bypass) return { kind: 'bypass', policy: label(bypass) };
   const allowAll = policies.find((p) => p.decision === 'allow' && matchesEveryone(p));
   if (allowAll) return { kind: 'weak', policy: label(allowAll) };

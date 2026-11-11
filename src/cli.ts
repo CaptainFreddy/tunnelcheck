@@ -35,6 +35,8 @@ Environment:
 
 Exit codes: 0 nothing exposed, 1 exposed hostnames found, 2 the scan could not run.`;
 
+const HOSTNAME = /^(?=.{1,253}$)([a-z0-9_]([a-z0-9_-]{0,61}[a-z0-9_])?\.)+[a-z][a-z0-9-]{1,62}$/i;
+
 interface Config {
   public?: string[];
   hosts?: string[];
@@ -91,8 +93,12 @@ async function main(): Promise<number> {
 
   const config = await loadConfig(values.config);
   let options: ScanOptions;
-  const wildcardHost = [...(config.hosts ?? []), ...values.host].find((h) => h.includes('*'));
-  if (wildcardHost) throw new Error(`"${wildcardHost}" cannot be checked: hosts must be full hostnames without wildcards.`);
+  // These end up in a URL that gets requested, so accept plain hostnames only:
+  // no wildcards, schemes, paths, ports or credentials.
+  const badHost = [...(config.hosts ?? []), ...values.host].find((h) => !HOSTNAME.test(h.trim()));
+  if (badHost !== undefined) {
+    throw new Error(`"${badHost}" cannot be checked: hosts must be plain hostnames such as app.example.com.`);
+  }
   if (values.demo) {
     options = {
       source: demoSource,

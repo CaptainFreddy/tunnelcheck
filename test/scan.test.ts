@@ -94,13 +94,18 @@ test('weak policies only fail in strict mode', async () => {
 
 test('probe classification', () => {
   const login = 'https://team.cloudflareaccess.com/cdn-cgi/access/login/app.example.com?kid=abc';
-  assert.equal(classify(302, login).kind, 'gated');
-  assert.equal(classify(302, '/cdn-cgi/access/login/x').kind, 'gated');
-  assert.equal(classify(302, 'https://app.example.com/login').kind, 'reachable'); // the app's own login
-  assert.equal(classify(301, 'https://evil.example/?next=.cloudflareaccess.com').kind, 'reachable');
-  assert.equal(classify(403, null).kind, 'blocked');
-  assert.equal(classify(200, null).kind, 'reachable');
-  assert.equal(classify(530, null).kind, 'reachable');
+  const host = 'app.example.com';
+  assert.equal(classify(302, login, host).kind, 'gated');
+  assert.equal(classify(302, '/cdn-cgi/access/login/x', host).kind, 'gated'); // relative, same host
+  assert.equal(classify(302, 'https://App.example.com/cdn-cgi/access/login/x', 'APP.example.com').kind, 'gated');
+  assert.equal(classify(302, 'https://app.example.com/login', host).kind, 'reachable'); // the app's own login
+  // A look-alike login path on another site is not Cloudflare Access.
+  assert.equal(classify(302, 'https://evil.example/cdn-cgi/access/login/x', host).kind, 'reachable');
+  assert.equal(classify(302, 'https://cloudflareaccess.com.evil.example/', host).kind, 'reachable');
+  assert.equal(classify(301, 'https://evil.example/?next=.cloudflareaccess.com', host).kind, 'reachable');
+  assert.equal(classify(403, null, host).kind, 'blocked');
+  assert.equal(classify(200, null, host).kind, 'reachable');
+  assert.equal(classify(530, null, host).kind, 'reachable');
 });
 
 test('the prober skips wildcards and reports network failures', async () => {

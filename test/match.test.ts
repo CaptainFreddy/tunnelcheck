@@ -76,6 +76,11 @@ test('policy state spots bypass-everyone and allow-everyone', () => {
   assert.equal(policyState(app('x', { policies: [] })).kind, 'ok');
   assert.equal(policyState(app('x', { policies: [{ decision: 'allow', include: everyone }] })).kind, 'weak');
   assert.equal(policyState(app('x', { policies: [{ decision: 'bypass', include: everyone }] })).kind, 'bypass');
+  // Service auth for everyone, or a decision this tool does not know, also skips the login.
+  assert.equal(policyState(app('x', { policies: [{ decision: 'non_identity', include: everyone }] })).kind, 'bypass');
+  assert.equal(policyState(app('x', { policies: [{ decision: 'something_new', include: everyone }] })).kind, 'bypass');
+  assert.equal(policyState(app('x', { policies: [{ decision: 'deny', include: everyone }] })).kind, 'ok');
+  assert.equal(policyState(app('x', { policies: [{ decision: 'non_identity', include: team }] })).kind, 'ok');
   // "Everyone" narrowed by a require rule is not everyone.
   assert.equal(
     policyState(app('x', { policies: [{ decision: 'allow', include: everyone, require: team }] })).kind,
