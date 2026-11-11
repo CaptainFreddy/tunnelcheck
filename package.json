@@ -1,0 +1,21 @@
+{
+  "name": "tunnelcheck",
+  "version": "0.1.0",
+  "description": "Find Cloudflare Tunnel hostnames that anyone on the internet can open without logging in.",
+  "license": "MIT",
+  "type": "module",
+  "bin": { "tunnelcheck": "dist/cli.js" },
+  "files": ["dist"],
+  "engines": { "node": ">=22.18" },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/*.test.ts\"",
+    "dev": "node src/cli.ts",
+    "demo": "node src/cli.ts scan --demo"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "typescript": "^5.9.0"
+  }
+}

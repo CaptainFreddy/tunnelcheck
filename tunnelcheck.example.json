@@ -1,0 +1,4 @@
+{
+  "public": ["blog.example.com", "*.pages.example.com"],
+  "hosts": ["notes.apps.example.com"]
+}

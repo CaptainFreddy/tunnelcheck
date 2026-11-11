@@ -1,0 +1,18 @@
+# Scan every six hours and alert when a new hostname turns up unprotected.
+# Put CLOUDFLARE_API_TOKEN (and optionally the other two) in a .env file next to this one.
+services:
+  tunnelcheck:
+    build: .
+    command: ["watch", "--interval", "6h", "--state", "/data/state.json"]
+    environment:
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:?set a read-only API token}
+      CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
+      TUNNELCHECK_WEBHOOK_URL: ${TUNNELCHECK_WEBHOOK_URL:-}
+    volumes:
+      - state:/data
+      # Optional allowlist of hostnames that are meant to be public:
+      # - ./tunnelcheck.json:/data/tunnelcheck.json:ro
+    restart: unless-stopped
+
+volumes:
+  state:
